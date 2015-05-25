@@ -1,0 +1,5 @@
+# latex output files
+*.aux
+*.log
+*.synctex.gz
+*.pdf
