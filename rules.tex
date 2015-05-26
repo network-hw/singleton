@@ -1,0 +1,114 @@
+\documentclass[10pt]{article}
+
+\usepackage{mathtools}
+\usepackage{amsmath}
+\usepackage{mathpartir}
+\usepackage{geometry}
+\usepackage{syntax}
+\usepackage{txfonts}
+\usepackage{amssymb}
+\usepackage{subdepth}
+
+\newcommand{\xto}{\xrightarrow}
+\newcommand{\wto}{\rightsquigarrow}
+\newcommand{\aless}{\preccurlyeq}
+\newcommand{\lto}{\longrightarrow}
+\let\emptyset\varnothing
+
+\title{Singleton Documentation}
+
+\begin{document}
+	\maketitle
+    \paragraph{Syntax}
+    \setlength{\grammarindent}{8em} % increase separation between LHS/RHS 
+    \begin{grammar}
+        <term> ::= <variable> 
+        \vspace{0.8em}
+        \alt <number>
+        \vspace{0.8em}
+        \alt unit
+        \vspace{0.8em}
+        \alt $\lambda$ <variable> : <type> . <term>
+        \vspace{0.8em}
+        \alt <term> <term>
+        \vspace{0.8em}
+        \alt ref <term> 
+        \vspace{0.8em}
+        \alt ! <term>
+        \vspace{0.8em}
+        \alt <term> := <term>
+        \vspace{0.8em}
+        \alt <location>
+
+        <value> ::= <number>
+        \vspace{0.8em}
+        \alt unit
+        \vspace{0.8em}
+        \alt $\lambda$ <variable> : <type> . <term>
+        \vspace{0.8em}
+        \alt <location>
+
+        <type> ::= Nat
+        \vspace{0.8em}
+        \alt Unit
+        \vspace{0.8em}
+        \alt Ref <type>
+        \vspace{0.8em}
+        \alt <type> $\xto{\varphi}$ <type>
+
+        <variable> ::= [a-z]
+
+        <number> ::= [1-9][0-9]*
+    \end{grammar}
+
+    \paragraph{Kind Inference}
+    \begin{mathpar}
+        \inferrule{\vdash\mathrm{Unit}\colon\mathbf{U}}{} \and
+        \inferrule{\vdash\mathrm{Ref}\ \mathrm{T}\colon\mathbf{A}}{} \and
+        \inferrule{\vdash\mathrm{Nat}\colon\mathbf{A}}{} \and
+        \inferrule{\vdash\mathrm{T_1}\xto{\varphi}\mathrm{T_2}\colon \varphi}{}
+    \end{mathpar}
+
+    \paragraph{Kind Bound}
+    \begin{mathpar}
+        \inferrule{\vdash\emptyset\aless\mathbf{U}}{} \and
+        \inferrule{\vdash\Sigma\aless\varphi\\ \vdash\mathrm{T}\colon\mathbf{U}}{\vdash\Sigma\cup\{\mathrm{x}\colon\mathrm{T}\}\aless\varphi} \and
+        \inferrule{\vdash\Sigma\aless\varphi\\ \vdash\mathrm{T}\colon\mathbf{A}}{\vdash\Sigma\cup\{\mathrm{x}\colon\mathrm{T}\}\aless\mathbf{A}}
+    \end{mathpar}
+
+    \paragraph{Context Extension}
+    \begin{mathpar}
+        \inferrule{\vdash\Gamma;\Sigma,\,*\wto\Gamma;\Sigma}{}\and
+        \inferrule{\vdash \mathrm{T}\colon \mathbf{U}\\ \vdash\Gamma_0\cup\{\mathrm{x}\colon \mathrm{T}\};\Sigma_0,\,\Sigma'\wto\Gamma;\Sigma}{\vdash\Gamma_0;\Sigma_0,\,\{\mathrm{x}\colon \mathrm{T}\}\cup\Sigma'\wto\Gamma;\Sigma} \and
+        \inferrule{\vdash \mathrm{T}\colon \varphi\\ \vdash\Gamma_0;\Sigma_0\cup\{\mathrm{x}\colon \mathrm{T}\},\,\Sigma'\wto\Gamma;\Sigma}{\vdash\Gamma_0;\Sigma_0,\,\{\mathrm{x}\colon \mathrm{T}\}\cup\Sigma'\wto\Gamma;\Sigma}
+    \end{mathpar}
+
+    \paragraph{Type Inference Rules}
+    \begin{mathpar}
+        \inferrule{\Gamma;\Sigma \vdash \mathrm{unit}\colon\mathrm{Unit}}{} \and
+        \inferrule{\Gamma;\Sigma \vdash \mathrm{n}\colon \mathrm{Nat}}{} \and
+        \inferrule{\mathrm{x}\colon \mathrm{T} \in \Gamma}{\Gamma\colon \Sigma \vdash \mathrm{x}\colon \mathrm{T}} \and
+        \inferrule{\mathrm{x}\colon \mathrm{T} \in \Sigma}{\Gamma\colon \Sigma \vdash \mathrm{x}\colon \mathrm{T}} \and
+        \inferrule{\Gamma;\Sigma_1 \vdash \mathrm{t_1}\colon \mathrm{T_1}\xto{\varphi}\mathrm{T_2}\\ \Gamma;\Sigma_2 \vdash \mathrm{t_2}\colon \mathrm{T_1}}{\Gamma;\Sigma_1\cup\Sigma_2 \vdash \mathrm{t_1}\ \mathrm{t_2}\colon \mathrm{T_2}} \and
+        \inferrule{\vdash \Gamma;\Sigma,\,\mathrm{x}\colon \mathrm{T_1} \wto \Gamma';\Sigma' \\ \Gamma';\Sigma' \vdash \mathrm{t}\colon \mathrm{T_2} \\ \Gamma\vdash\Sigma\aless\varphi}{\Gamma;\Sigma\vdash\lambda \mathrm{x}\colon \mathrm{T_1}.\ \mathrm{t_2}\colon \mathrm{T_1}\xto{\varphi}\mathrm{T_2}} \and
+        \inferrule{\Gamma;\Sigma \vdash \mathrm{t}\colon \mathrm{T}}{\Gamma;\Sigma \vdash \mathrm{ref}\ \mathrm{t}\colon  \mathrm{Ref}\ \mathrm{T}} \and
+        \inferrule{\mathrm{l}\colon \mathrm{T} \in \Sigma}{\Gamma;\Sigma \vdash \mathrm{l}\colon \mathrm{T}}\and
+        \inferrule{\Gamma;\Sigma\vdash \mathrm{t}\colon \mathrm{Ref}\ \mathrm{T}}{\Gamma;\Sigma\vdash!\,\mathrm{t}\colon \mathrm{T}}\and
+        \inferrule{\Gamma;\Sigma\vdash \mathrm{t_1}\colon \mathrm{Ref}\ \mathrm{T}\\ \Gamma;\Sigma\vdash \mathrm{t_2}\colon \mathrm{T}}{\Gamma;\Sigma\vdash \mathrm{t_1}:=\mathrm{t_2}\colon \mathrm{Unit}}
+    \end{mathpar}
+
+    \paragraph{Evaluation Rules}
+    \begin{mathpar}
+        \inferrule{\mathrm{t_1}\mid\mu\lto \mathrm{t_1}'\mid\mu'}{\mathrm{t_1}\ \mathrm{t_2}\mid\mu\lto \mathrm{t_1}'\ \mathrm{t_2}\mid\mu'}\and
+        \inferrule{\mathrm{t_2}\mid\mu\lto \mathrm{t_2}'\mid\mu'}{\mathrm{v_1}\ \mathrm{t_2}\mid\mu\lto \mathrm{v_1}\ \mathrm{t_2}'\mid\mu'}\and
+        \inferrule{(\lambda \mathrm{x}\colon\mathrm{T_1}.\ \mathrm{t})\ \mathrm{v}\mid\mu\lto[\mathrm{x}\mapsto \mathrm{v}]\,\mathrm{t}\mid\mu}{} \and
+        \inferrule{\mathrm{l}\not\in dom(\,\mu)}{\mathrm{ref}\ \mathrm{v_1}\mid\mu\lto\mathrm{l}\mid(\,\mu, \mathrm{l}\mapsto\mathrm{v_1})} \and
+        \inferrule{\mathrm{t_1}\mid\mu\lto\mathrm{t_1'}\mid\mu'}{\mathrm{ref}\ \mathrm{t_1}\mid\mu\lto\mathrm{ref}\ \mathrm{t_1'}\mid\mu'} \and
+        \inferrule{\mu\,(\mathrm{l})=\mathrm{v}}{!\,\mathrm{l}\mid\mu\lto\mathrm{v}\mid\mu} \and
+        \inferrule{\mathrm{t_1}\mid\mu\lto\mathrm{t_1'}\mid\mu'}{!\,\mathrm{t_1}\mid\mu\lto\!\,\mathrm{t_1'}\mid\mu}\and
+        \inferrule{\mathrm{l}:=\mathrm{v}\mid\mu\lto\mathrm{unit}\mid[\mathrm{l}\mapsto\mathrm{v}]\ \mu}{} \and
+        \inferrule{\mathrm{t_1}\mid\mu\lto\mathrm{t_1'}\mid\mu'}{\mathrm{t_1}:=\mathrm{t_2}\mid\mu\lto\mathrm{t_1'}:=\mathrm{t_2}\mid\mu'} \and
+        \inferrule{\mathrm{t_2}\mid\mu\lto\mathrm{t_2'}\mid\mu'}{\mathrm{v_1}:=\mathrm{t_2}\mid\mu\lto\mathrm{v_1}:=\mathrm{t_2'}\mid\mu'}
+    \end{mathpar}
+\end{document}
+
