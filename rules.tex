@@ -1,21 +1,24 @@
 \documentclass[10pt]{article}
 
 \usepackage{mathtools}
-\usepackage{amsmath}
+\usepackage{amsmath, amssymb, amsthm}
 \usepackage{mathpartir}
 \usepackage{geometry}
 \usepackage{syntax}
 \usepackage{txfonts}
-\usepackage{amssymb}
 \usepackage{subdepth}
 
 \newcommand{\xto}{\xrightarrow}
 \newcommand{\wto}{\rightsquigarrow}
 \newcommand{\aless}{\preccurlyeq}
 \newcommand{\lto}{\longrightarrow}
+\newcommand{\context}{\Gamma;\Sigma\mid\Phi}
 \let\emptyset\varnothing
 
 \title{Singleton Documentation}
+
+\theoremstyle{definition}\newtheorem*{theorem}{Theorem}
+\theoremstyle{definition}\newtheorem*{definition}{Definition}
 
 \begin{document}
 	\maketitle
@@ -36,9 +39,23 @@
         \vspace{0.8em}
         \alt ! <term>
         \vspace{0.8em}
-        \alt <term> := <term>
+        \alt <term> `:=' <term>
         \vspace{0.8em}
         \alt <location>
+        \vspace{0.8em}
+        \alt mvar <term> 
+        \vspace{0.8em}
+        \alt \$ <term>
+        \vspace{0.8em}
+        \alt <term> `=<<' <term>
+        \vspace{0.8em}
+        \alt \{\;<term>, <term>\;\}
+        \vspace{0.8em}
+        \alt <term>.1
+        \vspace{0.8em}
+        \alt <term>.2
+        \vspace{0.8em}
+        \alt fork <term> <term>
 
         <value> ::= <number>
         \vspace{0.8em}
@@ -47,6 +64,12 @@
         \alt $\lambda$ <variable> : <type> . <term>
         \vspace{0.8em}
         \alt <location>
+        \vspace{0.8em}
+        \alt ref <value>
+        \vspace{0.8em}
+        \alt mvar <value>
+        \vspace{0.8em}
+        \alt \{\;<value>, <value>\;\}
 
         <type> ::= Nat
         \vspace{0.8em}
@@ -54,7 +77,11 @@
         \vspace{0.8em}
         \alt Ref <type>
         \vspace{0.8em}
+        \alt Mvar <type>
+        \vspace{0.8em}
         \alt <type> $\xto{\varphi}$ <type>
+        \vspace{0.8em}
+        \alt <type> $\times$ <type>
 
         <variable> ::= [a-z]
 
@@ -65,8 +92,10 @@
     \begin{mathpar}
         \inferrule{\vdash\mathrm{Unit}\colon\mathbf{U}}{} \and
         \inferrule{\vdash\mathrm{Ref}\ \mathrm{T}\colon\mathbf{A}}{} \and
+        \inferrule{\vdash\mathrm{Mvar}\ \mathrm{T}\colon\mathbf{U}}{} \and
         \inferrule{\vdash\mathrm{Nat}\colon\mathbf{A}}{} \and
-        \inferrule{\vdash\mathrm{T_1}\xto{\varphi}\mathrm{T_2}\colon \varphi}{}
+        \inferrule{\vdash\mathrm{T_1}\xto{\varphi}\mathrm{T_2}\colon \varphi}{} \and
+        \inferrule{\vdash\mathrm{T_1}\colon\varphi_1\\ \vdash\mathrm{T_2}\colon\varphi_2}{\vdash \mathrm{T_1}\times\mathrm{T_2}\colon\varphi_1\sqcap\varphi_2}
     \end{mathpar}
 
     \paragraph{Kind Bound}
@@ -83,18 +112,25 @@
         \inferrule{\vdash \mathrm{T}\colon \varphi\\ \vdash\Gamma_0;\Sigma_0\cup\{\mathrm{x}\colon \mathrm{T}\},\,\Sigma'\wto\Gamma;\Sigma}{\vdash\Gamma_0;\Sigma_0,\,\{\mathrm{x}\colon \mathrm{T}\}\cup\Sigma'\wto\Gamma;\Sigma}
     \end{mathpar}
 
-    \paragraph{Type Inference Rules}
+    \paragraph{Type Inference Rules} \mbox{} \\
     \begin{mathpar}
-        \inferrule{\Gamma;\Sigma \vdash \mathrm{unit}\colon\mathrm{Unit}}{} \and
-        \inferrule{\Gamma;\Sigma \vdash \mathrm{n}\colon \mathrm{Nat}}{} \and
-        \inferrule{\mathrm{x}\colon \mathrm{T} \in \Gamma}{\Gamma\colon \Sigma \vdash \mathrm{x}\colon \mathrm{T}} \and
-        \inferrule{\mathrm{x}\colon \mathrm{T} \in \Sigma}{\Gamma\colon \Sigma \vdash \mathrm{x}\colon \mathrm{T}} \and
-        \inferrule{\Gamma;\Sigma_1 \vdash \mathrm{t_1}\colon \mathrm{T_1}\xto{\varphi}\mathrm{T_2}\\ \Gamma;\Sigma_2 \vdash \mathrm{t_2}\colon \mathrm{T_1}}{\Gamma;\Sigma_1\cup\Sigma_2 \vdash \mathrm{t_1}\ \mathrm{t_2}\colon \mathrm{T_2}} \and
-        \inferrule{\vdash \Gamma;\Sigma,\,\mathrm{x}\colon \mathrm{T_1} \wto \Gamma';\Sigma' \\ \Gamma';\Sigma' \vdash \mathrm{t}\colon \mathrm{T_2} \\ \Gamma\vdash\Sigma\aless\varphi}{\Gamma;\Sigma\vdash\lambda \mathrm{x}\colon \mathrm{T_1}.\ \mathrm{t_2}\colon \mathrm{T_1}\xto{\varphi}\mathrm{T_2}} \and
-        \inferrule{\Gamma;\Sigma \vdash \mathrm{t}\colon \mathrm{T}}{\Gamma;\Sigma \vdash \mathrm{ref}\ \mathrm{t}\colon  \mathrm{Ref}\ \mathrm{T}} \and
-        \inferrule{\mathrm{l}\colon \mathrm{T} \in \Sigma}{\Gamma;\Sigma \vdash \mathrm{l}\colon \mathrm{T}}\and
-        \inferrule{\Gamma;\Sigma\vdash \mathrm{t}\colon \mathrm{Ref}\ \mathrm{T}}{\Gamma;\Sigma\vdash!\,\mathrm{t}\colon \mathrm{T}}\and
-        \inferrule{\Gamma;\Sigma\vdash \mathrm{t_1}\colon \mathrm{Ref}\ \mathrm{T}\\ \Gamma;\Sigma\vdash \mathrm{t_2}\colon \mathrm{T}}{\Gamma;\Sigma\vdash \mathrm{t_1}:=\mathrm{t_2}\colon \mathrm{Unit}}
+        \inferrule{\context \vdash \mathrm{unit}\colon\mathrm{Unit}}{} \and
+        \inferrule{\context \vdash \mathrm{n}\colon \mathrm{Nat}}{} \and
+        \inferrule{\mathrm{x}\colon \mathrm{T} \in \Gamma}{\context\vdash \mathrm{x}\colon \mathrm{T}} \and
+        \inferrule{\mathrm{x}\colon \mathrm{T} \in \Sigma}{\context \vdash \mathrm{x}\colon \mathrm{T}} \and
+        \inferrule{\Gamma;\Sigma_1\mid\Phi \vdash \mathrm{t_1}\colon \mathrm{T_1}\xto{\varphi}\mathrm{T_2}\\ \Gamma;\Sigma_2\mid\Phi \vdash \mathrm{t_2}\colon \mathrm{T_1}}{\Gamma;\Sigma_1\cup\Sigma_2\mid\Phi \vdash \mathrm{t_1}\ \mathrm{t_2}\colon \mathrm{T_2}} \and
+        \inferrule{\vdash \Gamma;\Sigma,\,\mathrm{x}\colon \mathrm{T_1} \wto \Gamma';\Sigma' \\ \Gamma';\Sigma'\mid\Phi \vdash \mathrm{t}\colon \mathrm{T_2} \\ \Gamma\vdash\Sigma\aless\varphi}{\context\vdash\lambda \mathrm{x}\colon \mathrm{T_1}.\ \mathrm{t_2}\colon \mathrm{T_1}\xto{\varphi}\mathrm{T_2}} \and
+        \inferrule{\context \vdash \mathrm{t}\colon \mathrm{T}}{\context \vdash \mathrm{ref}\ \mathrm{t}\colon  \mathrm{Ref}\ \mathrm{T}} \and
+        \inferrule{\context \vdash\mathrm{t}\colon \mathrm{Ref}\ \mathrm{T}}{\context \vdash!\,\mathrm{t}\colon \mathrm{T}}\and
+        \inferrule{\context \vdash\mathrm{t_1}\colon \mathrm{Ref}\ \mathrm{T}\\ \context \mathrm{t_2}\colon \mathrm{T}}{\context\vdash \mathrm{t_1}:=\mathrm{t_2}\colon \mathrm{Unit}} \and
+        \inferrule{\context \vdash\mathrm{t}\colon \mathrm{T}}{\context \vdash\mathrm{mvar}\ \mathrm{t}\colon\mathrm{Mvar}\ \mathrm{T}} \and
+        \inferrule{\context \vdash\mathrm{t}\colon \mathrm{Mvar}\ \mathrm{T}}{\context \vdash\$\,\mathrm{t}\colon \mathrm{T}} \and
+        \inferrule{\context \vdash\mathrm{t_1}\colon \mathrm{Mvar}\ \mathrm{T}\\ \context \vdash\mathrm{t_2}\colon \mathrm{T}}{\context\vdash\mathrm{t_1}=<<\mathrm{t_2}\colon\mathrm{Unit}} \and
+        \inferrule{\Phi(\mathrm{l})=\mathrm{T}}{\context \vdash \mathrm{l}\colon \mathrm{T}}\and
+        \inferrule{\context \vdash\mathrm{t_1}\colon \mathrm{T_1}\\\context \vdash\mathrm{t_2}\colon \mathrm{T_2}}{\context\vdash\{\,\mathrm{t_1}, \mathrm{t_2}\,\}\colon\mathrm{T_1}\times\mathrm{T_2}} \and
+        \inferrule{\context \vdash\mathrm{t}\colon\mathrm{T_1}\times\mathrm{T_2}}{\context \vdash\mathrm{t}.\mathrm{1}\colon\mathrm{T_1}} \and
+        \inferrule{\context \vdash\mathrm{t}\colon\mathrm{T_1}\times\mathrm{T_2}}{\context \vdash\mathrm{t}.\mathrm{2}\colon\mathrm{T_2}} \and
+        \inferrule{\context \vdash\mathrm{t_1}\colon\mathrm{T_1}\\ \context \vdash\mathrm{t_2}\colon\mathrm{T_2}}{\context \vdash\mathrm{fork}\ \mathrm{t_1}\ \mathrm{t_2}\colon\mathrm{T_1}\times\mathrm{T_2}}
     \end{mathpar}
 
     \paragraph{Evaluation Rules}
@@ -102,13 +138,61 @@
         \inferrule{\mathrm{t_1}\mid\mu\lto \mathrm{t_1}'\mid\mu'}{\mathrm{t_1}\ \mathrm{t_2}\mid\mu\lto \mathrm{t_1}'\ \mathrm{t_2}\mid\mu'}\and
         \inferrule{\mathrm{t_2}\mid\mu\lto \mathrm{t_2}'\mid\mu'}{\mathrm{v_1}\ \mathrm{t_2}\mid\mu\lto \mathrm{v_1}\ \mathrm{t_2}'\mid\mu'}\and
         \inferrule{(\lambda \mathrm{x}\colon\mathrm{T_1}.\ \mathrm{t})\ \mathrm{v}\mid\mu\lto[\mathrm{x}\mapsto \mathrm{v}]\,\mathrm{t}\mid\mu}{} \and
+
         \inferrule{\mathrm{l}\not\in dom(\,\mu)}{\mathrm{ref}\ \mathrm{v_1}\mid\mu\lto\mathrm{l}\mid(\,\mu, \mathrm{l}\mapsto\mathrm{v_1})} \and
         \inferrule{\mathrm{t_1}\mid\mu\lto\mathrm{t_1'}\mid\mu'}{\mathrm{ref}\ \mathrm{t_1}\mid\mu\lto\mathrm{ref}\ \mathrm{t_1'}\mid\mu'} \and
         \inferrule{\mu\,(\mathrm{l})=\mathrm{v}}{!\,\mathrm{l}\mid\mu\lto\mathrm{v}\mid\mu} \and
         \inferrule{\mathrm{t_1}\mid\mu\lto\mathrm{t_1'}\mid\mu'}{!\,\mathrm{t_1}\mid\mu\lto\!\,\mathrm{t_1'}\mid\mu}\and
         \inferrule{\mathrm{l}:=\mathrm{v}\mid\mu\lto\mathrm{unit}\mid[\mathrm{l}\mapsto\mathrm{v}]\ \mu}{} \and
         \inferrule{\mathrm{t_1}\mid\mu\lto\mathrm{t_1'}\mid\mu'}{\mathrm{t_1}:=\mathrm{t_2}\mid\mu\lto\mathrm{t_1'}:=\mathrm{t_2}\mid\mu'} \and
-        \inferrule{\mathrm{t_2}\mid\mu\lto\mathrm{t_2'}\mid\mu'}{\mathrm{v_1}:=\mathrm{t_2}\mid\mu\lto\mathrm{v_1}:=\mathrm{t_2'}\mid\mu'}
+        \inferrule{\mathrm{t_2}\mid\mu\lto\mathrm{t_2'}\mid\mu'}{\mathrm{v_1}:=\mathrm{t_2}\mid\mu\lto\mathrm{v_1}:=\mathrm{t_2'}\mid\mu'} \and
+
+        \inferrule{\mathrm{l}\not\in dom(\,\mu)}{\mathrm{mvar}\ \mathrm{v_1}\mid\mu\lto\mathrm{l}\mid(\,\mu, \mathrm{l}\mapsto\mathrm{v_1})} \and
+        \inferrule{\mathrm{t_1}\mid\mu\lto\mathrm{t_1'}\mid\mu'}{\mathrm{mvar}\ \mathrm{t_1}\mid\mu\lto\mathrm{mvar}\ \mathrm{t_1'}\mid\mu'} \and
+        \inferrule{\mu\,(\mathrm{l})=\mathrm{v}}{\$\,\mathrm{l}\mid\mu\lto\mathrm{v}\mid\mu} \and
+        \inferrule{\mathrm{t_1}\mid\mu\lto\mathrm{t_1'}\mid\mu'}{\$\,\mathrm{t_1}\mid\mu\lto\$\,\mathrm{t_1'}\mid\mu}\and
+        \inferrule{\mathrm{l}=<<\mathrm{v}\mid\mu\lto\mathrm{unit}\mid[\mathrm{l}\mapsto\mathrm{v}]\ \mu}{} \and
+        \inferrule{\mathrm{t_1}\mid\mu\lto\mathrm{t_1'}\mid\mu'}{\mathrm{t_1}=<<\mathrm{t_2}\mid\mu\lto\mathrm{t_1'}=<<\mathrm{t_2}\mid\mu'} \and
+        \inferrule{\mathrm{t_2}\mid\mu\lto\mathrm{t_2'}\mid\mu'}{\mathrm{v_1}=<<\mathrm{t_2}\mid\mu\lto\mathrm{v_1}=<<\mathrm{t_2'}\mid\mu'} \and
+
+        \inferrule{\{\,\mathrm{v_1}, \mathrm{v_2}\,\}.1\lto\mathrm{v_1}}{} \and
+        \inferrule{\{\,\mathrm{v_1}, \mathrm{v_2}\,\}.2\lto\mathrm{v_2}}{} \and
+        \inferrule{\mathrm{t}\lto\mathrm{t'}}{\mathrm{t.1}\lto\mathrm{t'.1}}{} \and
+        \inferrule{\mathrm{t}\lto\mathrm{t'}}{\mathrm{t.2}\lto\mathrm{t'.2}}{} \and
+        \inferrule{\mathrm{t_1}\lto\mathrm{t'_1}}{\{\,\mathrm{t_1}, \mathrm{t_2}\,\}\lto\{\,\mathrm{t'_1}, \mathrm{t_2}\,\}}{} \and
+        \inferrule{\mathrm{t_2}\lto\mathrm{t'_2}}{\{\,\mathrm{v_1}, \mathrm{t_2}\,\}\lto\{\,\mathrm{v_1}, \mathrm{t'_2}\,\}}{} \and
+
+        \inferrule{\mathrm{fork}\ \mathrm{v_1}\ \mathrm{v_2}\lto\{\,\mathrm{v_1}, \mathrm{v_2}\,\}}{}\and
+        \inferrule{\mathrm{t_1}\lto\mathrm{t'_1}}{\mathrm{fork}\ \mathrm{t_1}\ \mathrm{t_2}\lto \mathrm{fork}\ \mathrm{t'_1}\ \mathrm{t_2}} \and
+        \inferrule{\mathrm{t_2}\lto\mathrm{t'_2}}{\mathrm{fork}\ \mathrm{t_1}\ \mathrm{t_2}\lto \mathrm{fork}\ \mathrm{t_1}\ \mathrm{t'_2}} \and
     \end{mathpar}
+    
+    \newpage
+    \begin{definition}
+        A store $\mu$ is said to well typed with respect to a typing context $\Gamma;\Sigma$ and a store typing $\Phi$,
+        written $\context\vdash\mu$, iff $dom(\mu) = dom(\Phi)$ and $\context\vdash \mu(\mathrm{l})\colon\Phi(\mathrm{l}),\ \forall \mathrm{l} \in dom(\mu)$.
+    \end{definition}
+    \begin{theorem}[{\it Preservation}]
+        if 
+        \begin{itemize}
+            \item[] $\context\vdash\mathrm{t}\colon\mathrm{T}$
+            \item[] $\context\vdash\mu$
+            \item[] $\mathrm{t}\mid\mu\lto\mathrm{t'}\mid\mu'$
+        \end{itemize}
+        then for some $\Phi'\supseteq\Phi$,
+        \begin{itemize}
+            \item[] $\Gamma;\Sigma\mid\Phi'\vdash\mathrm{t}\colon\mathrm{T}$
+            \item[] $\Gamma;\Sigma\mid\Phi'\vdash\mu'$
+        \end{itemize}
+    \end{theorem}
+    \begin{theorem}[{\it Progress}]
+        Suppose $\mathrm{t}$ is a closed, well typed term 
+        (i.e. $\emptyset;\emptyset\mid\Phi\vdash\mathrm{t}\colon\mathrm{T}$ for some $\Phi$ and $\mathrm{T}$). 
+        Then either $\mathrm{t}$ is a value or else, for any store $\mu$ such that $\emptyset;\emptyset\mid\Phi\vdash\mu$, 
+        there is some term $\mathrm{t'}$ and store $\mu$ with $\mathrm{t}\mid\mu\lto\mathrm{t'}\mid\mu'$
+    \end{theorem}
+    \begin{theorem}[{\it race condition free}]
+        Suppose $\mathrm{t}$ is a closed, well typed term and it can be evaluated to a value $v$ associated with a store $\mu$. Then all values residing at locations which are allocated by ref are deterministic no matter which oreder of evaluation rules are applied.
+    \end{theorem}
 \end{document}
 
