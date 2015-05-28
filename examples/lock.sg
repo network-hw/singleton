@@ -1,0 +1,37 @@
+let newLock = lambda a:Ref Nat.
+    let init = mvar 1 in
+    let slotInit = mvar a in
+    let newlock' = lambda has:Mvar Nat.lambda slot:Mvar Ref Nat.
+        let rec g = lambda a:Ref Nat. lambda isLock:Nat. 
+                if isLock == 1 then
+                    if has == 1 then 
+                        has =<< 0;
+                        @slot
+                    else
+                        g a isLock
+                else
+                    if has == 0 then
+                        has =<< 1;
+                        slot =<< a;
+                        ref 0
+                    else
+                        ref 0
+        in g
+    in
+        newlock' init slotInit
+in
+
+let buf = ref 0 in
+let lock = newLock buf in
+let t1 = lambda _:Unit.
+            let op = lock dummy 1 in
+                op := 3;
+                lock op 0
+in
+let t2 = lambda _:Unit.
+            let op = lock dummy 1 in
+                op := 4;
+                lock op 0
+in
+    fork(t1, t2)
+
