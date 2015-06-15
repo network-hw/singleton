@@ -185,12 +185,60 @@
             \item[] $\Gamma;\Sigma\mid\Phi'\vdash\mu'$
         \end{itemize}
     \end{theorem}
+    \begin{proof}
+        For $\context\vdash\mathrm{t_1}\colon\mathrm{T}$ and $\mathrm{t_1}\mid\mu\lto\mathrm{t_2}\mid\mu$, it can be given by the induction on the structure of type derived tree T. Here are the induction cases:
+        \begin{itemize}
+            \item $\mathrm{t_1}$ is in form that $\mathrm{t_{11}}\ \mathrm{t_{12}}$. By the inversion lemma $\mathrm{t_{11}}$ must have type $\mathrm{T_1}\to\mathrm{T}$ while $\mathrm{t_{12}}$ has type $\mathrm{T_1}$.
+                Here comes the subcase:
+                \begin{itemize}
+                    \item In the case that evaluation rule $\mathrm{t_{11}}\ \mathrm{t_{12}} \lto \mathrm{t'_{11}}\ \mathrm{t_{12}}$ is applied, $\mathrm{t'_{11}}$ must have type $\mathrm{T_1}\to\mathrm{T}$ by the induction hypothesis. So $\mathrm{t'_{11}}\ \mathrm{t_{12}}$ has type $\mathrm{T}$, the hypothesis holds.
+                    \item In the case that evaluation rule $\mathrm{t_{11}}\ \mathrm{t_{12}} \lto \mathrm{t_{11}}\ \mathrm{t'_{12}}$ is applied, it is similar.
+                    \item In the case that E-SUB evaluation rule is applied, $\mathrm{t_{11}}$ is in form that $\lambda \mathrm{x}\colon \mathrm{T_1}.\ \mathrm{t_{13}}$ by the canonical lemma while $\mathrm{t_{13}}$ has type T.
+                        And $\mathrm{t_2}$ is in form that $[\mathrm{x}\mapsto\mathrm{t_{12}}]\, \mathrm{t_{13}}$. Note that x and $\mathrm{t_{12}}$ both have type $\mathrm{T_1}$, $[\mathrm{x}\mapsto\mathrm{t_{12}}]\, \mathrm{t_{13}}$ has type T by the substitution lemma. The hypothesis holds.
+                \end{itemize}
+                \item $\mathrm{t_1}$ is in form that $!\mathrm{t_{11}}$. By the inversion lemma $\mathrm{t_{11}}$ must have type $\mathrm{Ref}\,\mathrm{T}$.
+                    \begin{itemize}
+                        \item In the case that evaluation rule $!\mathrm{t_{11}}\lto!\mathrm{t'_{11}}$ is applied, $\mathrm{t'_{11}}$ must have type $\mathrm{Ref}\,\mathrm{T}$ by the hypothesis,
+                            so $!\mathrm{t'_{11}}$ has type $T$. The hypothesis holds.
+                        \item In the case that evaluation rule $!\mathrm{t_{11}}\lto \mathrm{x}$ is applied where $\mathrm{t_{11}} = \mathrm{ref}\ \mathrm{x}$. By the inversion lemma, x must have type $T$. The hypothesis holds.
+                    \end{itemize}
+                \item $\mathrm{t_1}$ is in form that $@\mathrm{t_{11}}$. It is similar to the previous case.
+                \item $\mathrm{t_1}$ is in form that $\mathrm{fork}\ \mathrm{t_{11}}\ \mathrm{t_{12}}$ and $\mathrm{T}$ is $\mathrm{T_1}\times\mathrm{T_2}$ while the type of $\mathrm{t_{11}}$ and $\mathrm{t_{12}}$ are $\mathrm{T_1}$ and $\mathrm{T_2}$ respectively.
+                    \begin{itemize}
+                        \item In the case that evaluation rule $\mathrm{fork}\ \mathrm{t_{11}}\ \mathrm{t_{12}} \lto \mathrm{fork}\ \mathrm{t'_{11}}\ \mathrm{t_{12}}$. By the induction hypothesis, $\mathrm{t'_{11}}$ has type $\mathrm{T_1}$. So $\mathrm{fork}\ \mathrm{t'_{11}}\ \mathrm{t_{12}}$ has type $\mathrm{T_1}\times\mathrm{T_2}$.
+                            The hypothesis holds.
+                        \item In the case that evaluation rule $\mathrm{fork}\ \mathrm{t_{11}}\ \mathrm{t_{12}} \lto \mathrm{fork}\ \mathrm{t_{11}}\ \mathrm{t'_{12}}$. It is similar to previous case.
+                        \item In the case that evaluation rule $\mathrm{fork}\ \mathrm{t_{11}}\ \mathrm{t_{12}} \lto \{\mathrm{t_{11}},\,\mathrm{t_{12}}$. In this case, both $\mathrm{t_{11}}$ and $\mathrm{t_{12}}$ are values, so the type of result is $\mathrm{T_1}\times\mathrm{T_2}$. The hypothesis holds.
+                    \end{itemize}
+                \item Ohter cases are trival and similar to the proof in textbook, we omit them here.
+        \end{itemize}
+    \end{proof}
     \begin{theorem}[{\it Progress}]
         Suppose $\mathrm{t}$ is a closed, well typed term 
         (i.e. $\emptyset;\emptyset\mid\Phi\vdash\mathrm{t}\colon\mathrm{T}$ for some $\Phi$ and $\mathrm{T}$). 
         Then either $\mathrm{t}$ is a value or else, for any store $\mu$ such that $\emptyset;\emptyset\mid\Phi\vdash\mu$, 
         there is some term $\mathrm{t'}$ and store $\mu$ with $\mathrm{t}\mid\mu\lto\mathrm{t'}\mid\mu'$
     \end{theorem}
+    \begin{proof}
+        The proof can be given by induction on the structure of type derivation tree.
+        \begin{itemize}
+            \item t is in form that $\mathrm{t_{11}}\ \mathrm{t_{12}}$. By the inversion lemmas, $\mathrm{t_{11}}$ has type $\mathrm{T_1}\to\mathrm{T}$ while $\mathrm{t_{12}}$ has type $\mathrm{T_1}$.
+                \begin{itemize}
+                    \item In the case that $\mathrm{t_{11}}$ is not a value, it can take an evaluation step by induction hypothesis. So the whole term t can take an evaluation step by $E-APP1$.
+                    \item It is similar to the case that $\mathrm{t_{12}}$ is not a value. 
+                    \item In the case that both $\mathrm{t_{11}}$ and $\mathrm{t_{12}}$ are value, $\mathrm{t_{11}}$ must be $\lambda\ \mathrm{x}\colon\mathrm{T_1}.\,\mathrm{t_{13}}$ by canonical lemma.
+                            So E-SUB rule can be applied and the induction hypothesis holds.
+                \end{itemize}
+            \item t is in form that $!\mathrm{t_{11}}$. 
+                \begin{itemize}
+                    \item In the case that $\mathrm{t_{11}}$ is not a value, $\mathrm{t_{11}}$ can take an evaluation step. So the whole term can take an evaluation step and the hypothesis holds.
+                    \item In the case that $\mathrm{t_{11}}$ is a value, it must be a location $\mathrm{l}$. For every location, it must bind a value in the storage. So the whole term can take an evaluation step to the binded value and the hypothesis holds.
+                \end{itemize}
+            \item t is in form that fork $\mathrm{t_1}\ \mathrm{t_2}$. If $\mathrm{t_1}$ is not a value, it can take an evaluation step and thus the whole term can take a step.
+                It is similar to that $\mathrm{t_2}$ is not a value. If both $\mathrm{t_1}$ and $\mathrm{t_2}$ are value, the whole term can take a step to a pair. The hypothesis holds.
+            \item Other cases are trival and similar to the proof in textbook, we omit them here.
+        \end{itemize}
+    \end{proof}
     \begin{theorem}[{\it race condition free}]
         Suppose $\mathrm{t}$ is a closed, well typed term and it can be evaluated to a value $v$ associated with a store $\mu$. Then all values residing at locations which are allocated by ref are deterministic no matter which oreder of evaluation rules are applied.
     \end{theorem}
