@@ -132,7 +132,7 @@
         \inferrule{\context \vdash\mathrm{t}\colon\mathrm{T_1}\times\mathrm{T_2}}{\context \vdash\mathrm{t}.\mathrm{1}\colon\mathrm{T_1}} \and
         \inferrule{\context \vdash\mathrm{t}\colon\mathrm{T_1}\times\mathrm{T_2}}{\context \vdash\mathrm{t}.\mathrm{2}\colon\mathrm{T_2}} \and
         \inferrule{\Gamma;\Sigma_1\mid\Phi \vdash\mathrm{t_1}\colon\mathrm{T_1}\\ \Gamma;\Sigma_2\mid\Phi \vdash\mathrm{t_2}\colon\mathrm{T_2}}{\Gamma;\Sigma_1\cup\Sigma_2\mid\Phi \vdash\mathrm{fork}\ \mathrm{t_1}\ \mathrm{t_2}\colon\mathrm{T_1}\times\mathrm{T_2}} \and
-        \inferrule{\context \vdash\mathrm{t}\colon\mathrm{T}\to\mathrm{T}}{\context \vdash \mathrm{fix}\ \mathrm{t}\colon\mathrm{T}}
+        \inferrule{\context \vdash\mathrm{t}\colon\mathrm{T}\xto{\varphi}\mathrm{T}}{\context \vdash \mathrm{fix}\ \mathrm{t}\colon\mathrm{T}}
     \end{mathpar}
 
     \paragraph{Evaluation Rules}
