@@ -1,0 +1,3 @@
+let account = ref 0 in
+    let deposit = lambda _:Unit. account := succ (!account) in
+        fork {(deposit unit), (deposit unit)};
