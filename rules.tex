@@ -19,6 +19,7 @@
 
 \theoremstyle{definition}\newtheorem*{theorem}{Theorem}
 \theoremstyle{definition}\newtheorem*{definition}{Definition}
+\theoremstyle{definition}\newtheorem*{lemma}{Lemma}
 
 \begin{document}
 	\maketitle
@@ -130,7 +131,7 @@
         \inferrule{\context \vdash\mathrm{t_1}\colon \mathrm{T_1}\\\context \vdash\mathrm{t_2}\colon \mathrm{T_2}}{\context\vdash\{\,\mathrm{t_1}, \mathrm{t_2}\,\}\colon\mathrm{T_1}\times\mathrm{T_2}} \and
         \inferrule{\context \vdash\mathrm{t}\colon\mathrm{T_1}\times\mathrm{T_2}}{\context \vdash\mathrm{t}.\mathrm{1}\colon\mathrm{T_1}} \and
         \inferrule{\context \vdash\mathrm{t}\colon\mathrm{T_1}\times\mathrm{T_2}}{\context \vdash\mathrm{t}.\mathrm{2}\colon\mathrm{T_2}} \and
-        \inferrule{\context \vdash\mathrm{t_1}\colon\mathrm{T_1}\\ \context \vdash\mathrm{t_2}\colon\mathrm{T_2}}{\context \vdash\mathrm{fork}\ \mathrm{t_1}\ \mathrm{t_2}\colon\mathrm{T_1}\times\mathrm{T_2}}
+        \inferrule{\Gamma;\Sigma_1\mid\Phi \vdash\mathrm{t_1}\colon\mathrm{T_1}\\ \Gamma;\Sigma_2\mid\Phi \vdash\mathrm{t_2}\colon\mathrm{T_2}}{\Gamma;\Sigma_1\cup\Sigma_2\mid\Phi \vdash\mathrm{fork}\ \mathrm{t_1}\ \mathrm{t_2}\colon\mathrm{T_1}\times\mathrm{T_2}}
     \end{mathpar}
 
     \paragraph{Evaluation Rules}
@@ -222,7 +223,7 @@
     \begin{proof}
         The proof can be given by induction on the structure of type derivation tree.
         \begin{itemize}
-            \item t is in form that $\mathrm{t_{11}}\ \mathrm{t_{12}}$. By the inversion lemmas, $\mathrm{t_{11}}$ has type $\mathrm{T_1}\to\mathrm{T}$ while $\mathrm{t_{12}}$ has type $\mathrm{T_1}$.
+            \item t is in form that $\mathrm{t_{11}}\ \mathrm{t_{12}}$. By the inversion lemma, $\mathrm{t_{11}}$ has type $\mathrm{T_1}\to\mathrm{T}$ while $\mathrm{t_{12}}$ has type $\mathrm{T_1}$.
                 \begin{itemize}
                     \item In the case that $\mathrm{t_{11}}$ is not a value, it can take an evaluation step by induction hypothesis. So the whole term t can take an evaluation step by $E-APP1$.
                     \item It is similar to the case that $\mathrm{t_{12}}$ is not a value. 
@@ -239,8 +240,51 @@
             \item Other cases are trival and similar to the proof in textbook, we omit them here.
         \end{itemize}
     \end{proof}
-    \begin{theorem}[{\it race condition free}]
-        Suppose $\mathrm{t}$ is a closed, well typed term and it can be evaluated to a value $v$ associated with a store $\mu$. Then all values residing at locations which are allocated by ref are deterministic no matter which oreder of evaluation rules are applied.
+    \begin{lemma}[{\it Unique reference lemma}]
+        Suppose $\mathrm{t}$ is a closed, well typed term. All reference to involved locations are unique during evaluation.
+    \end{lemma}
+    \begin{proof}
+        The proof can be given by induction on the structure of type derivation tree.
+        \begin{itemize}
+            \item t is in form that $\mathrm{t_1}\ \mathrm{t_2}$. By the inversion lemma, $\mathrm{t_1}$ has type $\mathrm{T_1}\to\mathrm{T}$ and $\mathrm{T_1}$ respectively.
+                According to the induction hypothesis, all locations involved in $\mathrm{t_1}$ are unique in $\mathrm{t_1}$ and it also holds for $\mathrm{t_2}$. If there
+                is a reference $\mathrm{r}$ with kind $\mathbf{A}$ occurs in both $\mathrm{t_1}$ and $\mathrm{t_2}$. Note that all reference with kind $\mathbf{A}$ all reside in type context $\Sigma$ and the type context $\Sigma$ is splited into two parts $\Sigma_1$ and $\Sigma_2$ with no overlaps.
+                If $\mathrm{r}$ is divided into $\Sigma_1$, then $\mathrm{t_2}$ is ill typed due to the lack of context for $\mathrm{r}$. So dose the case that $\mathrm{r}$ is divied into $\Sigma_2$.
+            \item t is in form that $\mathrm{fork}\ \mathrm{t_1}\ \mathrm{t_2}$. It is similar to previous case.
+            \item Other cases are trival, we omit it here.
+        \end{itemize}
+    \end{proof}
+    \begin{definition}[{\it Forked state}]
+        A state $\mathrm{t}\mid\mu$ is said to forked state if $\mathrm{t}\mid\mu\lto\mathrm{t_1}\mid\mu_1$ and $\mathrm{t}\mid\mu\lto\mathrm{t_2}\mid\mu_2$ hold while $\mathrm{t_1}$ does not equal to $\mathrm{t_2}$.
+    \end{definition}
+    \begin{theorem}[{\it Race condition free}]
+        Suppose $\mathrm{t}$ is a closed, well typed term. There dose not exist a fork state in which the next steps access same storage location whose kind is $\mathbf{A}$ during the evaluation process of t.
     \end{theorem}
+    \begin{proof}
+        The proof can be given by induction on the structure of type derivation tree.
+        \begin{itemize}
+            \item t is in form that $\mathrm{t_1}\ \mathrm{t_2}$. By the inversion lemma, $\mathrm{t_1}$ has type $\mathrm{T_1}\to\mathrm{T}$ and $\mathrm{t_2}$ has type $\mathrm{T_1}$.
+                \begin{itemize}
+                    \item $\mathrm{t_1}$ is value and $\mathrm{t_2}$ is not value. Thus, $\mathrm{t_2}\mid\mu$ is forked state and the hypothesis holds during the evaluation of $\mathrm{t_2}$ by induction hypothesis.
+                    \item $\mathrm{t_2}$ is not value and $\mathrm{t_2}$ is not value. Thus, $\mathrm{t_1}\mid\mu$ is forked state and the hypothesis holds during the evaluation of $\mathrm{t_1}$ by induction hypothesis.
+                    \item Other case can not occur.
+                \end{itemize}
+            \item t is in form that $\mathrm{fork}\ \mathrm{t_1}\ \mathrm{t_2}$, in which $\mathrm{t_1}$ has type $\mathrm{T_1}$, $\mathrm{t_2}$ has type $\mathrm{T_2}$ and $\mathrm{t}$ has type $\mathrm{T_1}\times\mathrm{T_2}$
+                \begin{itemize}
+                    \item $\mathrm{t_1}$ is value and $\mathrm{t_2}$ is not value. In this case, $\mathrm{t_2}\mid\mu$ is forked state and the hypothesis holds for $\mathrm{t_2}$ by induction hypothesis.
+                    \item $\mathrm{t_2}$ is vlaue and $\mathrm{t_1}$ is not value. It is similar to previous case.
+                    \item Neither $\mathrm{t_1}$ or $\mathrm{t_2}$ is value.
+                        \begin{itemize}
+                            \item $\mathrm{t_1}\mid\mu$ is forked state. Then, $\mathrm{t_1}\mid\mu\lto\mathrm{t_{11}}\mid\mu_{11}$ and $\mathrm{t_1}\mid\mu\lto\mathrm{t_{12}}\mid\mu_{12}$. By the induction hypothesis, $\mathrm{t_{11}}$ and $\mathrm{t_{12}}$ does not access same storage.
+                                Thus, $\mathrm{fork}\ \mathrm{t_1}\ \mathrm{t_2}\mid\mu\lto\mathrm{fork}\ \mathrm{t_{11}}\ \mathrm{t_2}\mid\mu_{11}$ and $\mathrm{fork}\ \mathrm{t_1}\ \mathrm{t_2}\mid\mu\lto\mathrm{fork}\ \mathrm{t_{12}}\ \mathrm{t_2}\mid\mu$ hold the hypothesis.
+                            \item $\mathrm{t_2}\mid\mu$ is forked state. It is similar to previous case.
+                            \item Neither $\mathrm{t_1}\mid\mu$ or $\mathrm{t_2}\mid\mu$ is forked state. According the unique reference lemma, every storage location with kind $\mathrm{A}$ has an unique reference during the evaluation.
+                                Thus, either $\mathrm{t_1}$ or $\mathrm{t_2}$ is a reference to a specific location. It can not happen that $\mathrm{t_1}$ and $\mathrm{t_2}$ are the reference to a same location. So $\mathrm{fork}\ \mathrm{t_1}\ \mathrm{t_2}\lto\mathrm{fork}\ \mathrm{t'_1}\ \mathrm{t_2}$
+                                and $\mathrm{fork}\ \mathrm{t_1}\ \mathrm{t_2}\lto\mathrm{fork}\ \mathrm{t_1}\ \mathrm{t'_2}$ hold the hypothesis.
+                        \end{itemize}
+                \end{itemize}
+            \item Other cases are trival, we omit the proof.
+        \end{itemize}
+    \end{proof}
 \end{document}
 
