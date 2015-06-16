@@ -35,6 +35,7 @@ include .depend
 f: $(OBJS) main.cmo 
 	@echo Linking $@
 	ocamlc -o $@ $(COMMONOBJS) $(OBJS) 
+	ocamlc -o sg $(COMMONOBJS) $(OBJS) 
 
 # Build an executable typechecker for Windows
 f.exe: $(OBJS) main.cmo 
