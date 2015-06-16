@@ -273,21 +273,34 @@ let ctxsplit ctx =
       [] -> ([], ctxphi)
     | (x,bind)::rest -> 
         let (ctxu',ctxphi') = split2 rest ctxphi in
-        if isnamebound ctxphi x then (ctxu, (x,bind)::ctxphi)
-        else  ((x,bind)::ctxu, ctxphi)
+        if isnamebound ctxphi' x then (ctxu', (x,bind)::ctxphi')
+        else  ((x,bind)::ctxu', ctxphi')
   in
   let (ctxu, ctxphi) = split1 ctx in
     split2 ctxu ctxphi
 
-let rec ctxseperate xs = match xs with
-    [] -> [([], [])]
-  | x::xs' -> 
-      let ys = ctxseperate xs' in
+let rec ctxseperate xs = 
+  let res = match xs with
+      [] -> [([], [])]
+    | x::xs' -> 
+        let ys = ctxseperate xs' in
         (List.fold_left 
-          (fun acc (y1,y2) -> ((x::y1),y2)::(y1,(x::y2))::acc)
-          []
-          ys)
-
+            (fun acc (y1,y2) -> ((x::y1),y2)::(y1,(x::y2))::acc)
+            []
+            ys)
+  in
+  (List.filter 
+    (fun (y1,y2) -> 
+      let rec findtuple (x1,y1) xs = match xs with
+          [] -> false
+        | (x,y)::xs' -> if x1 = x then true else findtuple (x1,y1) xs'
+      in
+      let rec findsame xs ys = match xs with
+          [] -> true
+        | x::xs' -> not (findtuple x ys)
+      in
+        findsame y1 y2)
+    res)
 
 (* ------------------------   SUBTYPING  ------------------------ *)
 
@@ -500,19 +513,19 @@ let rec typeof ctx t =
   | TmApp(fi,t1,t2) ->
       (* first we split our context *)
       let (ctxu, ctxphi) = ctxsplit ctx in
-      (*
+      
       prcontext ctx;
       pr "ctxu: \n";
       prcontext ctxu;
       pr "ctxphi: \n";
       prcontext ctxphi;
-      *)
+      
       (* then we check each ctx1,ctx2 in the seperated ctxphi *)      
       let rec walk ctxss = 
         match ctxss with
           [] -> raise (TypingFailed (fi,"no context applied"))
         | (ctx1,ctx2)::ctxss' ->
-          (*pr "try: \n"; prcontext ctx1; prcontext ctx2;*)
+          pr "try: \n"; prcontext ctx1; prcontext ctx2;
           let ctx11 = List.concat [ctx1;ctxu] in
           let ctx12 = List.concat [ctx2;ctxu] in
           try  
@@ -545,11 +558,39 @@ let rec typeof ctx t =
         join ctx (typeof ctx t2) (typeof ctx t3)
       else error fi "guard of conditional not a boolean"
   | TmLet(fi,x,t1,t2) ->
-    let tyT1 = typeof ctx t1 in
-    let ctx' = addbinding ctx x (VarBind(tyT1)) in
-    (* and the type of T2 has been found *)
-    let tyT2 = typeof ctx' t2 in
-    typeShift (-1) tyT2
+      let (ctxu,ctxphi) = ctxsplit ctx in
+      (*
+      prcontext ctx;
+      pr "ctxu: \n";
+      prcontext ctxu;
+      pr "ctxphi: \n";
+      prcontext ctxphi;
+      *)
+      (* then we check each ctx1,ctx2 in the seperated ctxphi *)      
+      let rec walk ctxss = 
+        match ctxss with
+          [] -> raise (TypingFailed (fi,"no context applied"))
+        | (ctx1,ctx2)::ctxss' ->
+          pr "try: \n"; prcontext ctx1; prcontext ctx2;
+          let ctx11 = List.concat [ctx1;ctxu] in
+          let ctx12 = List.concat [ctx2;ctxu] in
+          try
+            let tyT1 = typeof ctx11 t1 in
+            let ctx12' = addbinding ctx12 x (VarBind(tyT1)) in
+            let tyT2 = typeof ctx12' t2 in
+              typeShift (-1) tyT2
+          with 
+            TypingFailed(_,msg) ->
+              (*pr msg;*)
+              walk ctxss'
+          | Syntax.GetTypeFailure -> 
+              (*pr "GetTypeFailure\n";*)
+              walk ctxss'
+      in
+      let ctxss = (ctxseperate ctxphi) in
+        (*pr "bindings in ctxphi...\n";
+        List.iter (fun (s,b) -> pr s; prbinding ctxphi b; pr "\n") ctxphi;*)
+        walk ctxss
   | TmProduct(fi,t1,t2)->
       let tyT1 = typeof ctx t1 in
       let tyT2 = typeof ctx t2 in 

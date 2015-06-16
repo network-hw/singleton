@@ -1,0 +1,1 @@
+(lambda x:Ref Nat.(lambda y: Ref Nat. x := 2) x) (ref 1);
