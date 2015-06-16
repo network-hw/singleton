@@ -545,9 +545,11 @@ let rec typeof ctx t =
         join ctx (typeof ctx t2) (typeof ctx t3)
       else error fi "guard of conditional not a boolean"
   | TmLet(fi,x,t1,t2) ->
-     let tyT1 = typeof ctx t1 in
-     let ctx' = addbinding ctx x (VarBind(tyT1)) in         
-     typeShift (-1) (typeof ctx' t2)
+    let tyT1 = typeof ctx t1 in
+    let ctx' = addbinding ctx x (VarBind(tyT1)) in
+    (* and the type of T2 has been found *)
+    let tyT2 = typeof ctx' t2 in
+    typeShift (-1) tyT2
   | TmProduct(fi,t1,t2)->
       let tyT1 = typeof ctx t1 in
       let tyT2 = typeof ctx t2 in 
