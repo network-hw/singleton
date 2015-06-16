@@ -142,7 +142,7 @@
         \inferrule{\mathrm{l}\not\in dom(\,\mu)}{\mathrm{ref}\ \mathrm{v_1}\mid\mu\lto\mathrm{l}\mid(\,\mu, \mathrm{l}\mapsto\mathrm{v_1})} \and
         \inferrule{\mathrm{t_1}\mid\mu\lto\mathrm{t_1'}\mid\mu'}{\mathrm{ref}\ \mathrm{t_1}\mid\mu\lto\mathrm{ref}\ \mathrm{t_1'}\mid\mu'} \and
         \inferrule{\mu\,(\mathrm{l})=\mathrm{v}}{!\,\mathrm{l}\mid\mu\lto\mathrm{v}\mid\mu} \and
-        \inferrule{\mathrm{t_1}\mid\mu\lto\mathrm{t_1'}\mid\mu'}{!\,\mathrm{t_1}\mid\mu\lto\!\,\mathrm{t_1'}\mid\mu}\and
+        \inferrule{\mathrm{t_1}\mid\mu\lto\mathrm{t_1'}\mid\mu'}{!\,\mathrm{t_1}\mid\mu\lto !\,\mathrm{t_1'}\mid\mu'}\and
         \inferrule{\mathrm{l}:=\mathrm{v}\mid\mu\lto\mathrm{unit}\mid[\mathrm{l}\mapsto\mathrm{v}]\ \mu}{} \and
         \inferrule{\mathrm{t_1}\mid\mu\lto\mathrm{t_1'}\mid\mu'}{\mathrm{t_1}:=\mathrm{t_2}\mid\mu\lto\mathrm{t_1'}:=\mathrm{t_2}\mid\mu'} \and
         \inferrule{\mathrm{t_2}\mid\mu\lto\mathrm{t_2'}\mid\mu'}{\mathrm{v_1}:=\mathrm{t_2}\mid\mu\lto\mathrm{v_1}:=\mathrm{t_2'}\mid\mu'} \and
