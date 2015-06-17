@@ -217,7 +217,7 @@ let rec kindof ctx ty = match ty with
     TyUnit -> KndU
   | TyRef(_) -> KndA
   | TyMvar(_) -> KndU
-  | TyNat -> KndA
+  | TyNat -> KndU
   | TyArr(_,_,knd) -> knd
   | TyProduct(ty1,ty2) -> 
       meetkind ctx (kindof ctx ty1) (kindof ctx ty2)

@@ -1,20 +1,22 @@
 let newlock = lambda slot: Mvar (Ref Nat).
     let full = mvar 1 in
-        letrec lock:Nat->(U)(Ref Nat)->(U)Unit = lambda flag:Nat. lambda r:Ref Nat.
-            if iszero flag then 
-                if iszero ($full) then 
-                    (lock flag) r
+        letrec lock:Nat->(U)(Ref Nat)->(U)Unit = 
+            lambda flag:Nat. lambda r:Ref Nat.
+                if iszero flag then 
+                    if iszero ($full) then 
+                        (lock flag) r
+                    else
+                        (lambda _: Unit.
+                            (lambda _': Unit. $slot)
+                        full <- 0)
                 else
-                    (lambda _: Unit.
-                        (lambda _': Unit. $slot)
-                    full <- 0)
-            else
-                ((lambda _: Unit. 
-                    (lambda _':Unit. 
-                        (lambda _'':Unit. r))
-                    slot <- r)
-                full <- 1)
-        in lock
+                    ((lambda _: Unit. 
+                        (lambda _':Unit. 
+                            (lambda _'':Unit. r))
+                        slot <- r)
+                    full <- 1)
+        in 
+            lock
 in
 
 let account = ref 0 in
