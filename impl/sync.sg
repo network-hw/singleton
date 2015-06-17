@@ -1,16 +1,19 @@
 let newlock = lambda slot: Mvar (Ref Nat).
     let full = mvar 1 in
         letrec lock:Nat->(U)(Ref Nat)->(U)Unit = lambda flag:Nat. lambda r:Ref Nat.
-            if iszero flag then /* aquire lock */
-                if iszero full then
-                    lock flag r
+            if iszero flag then 
+                if iszero ($full) then 
+                    (lock flag) r
                 else
-                    (full <- 0; 
-                    $slot)
+                    (lambda _: Unit.
+                        (lambda _': Unit. $slot)
+                    full <- 0)
             else
-                (full <- 1;
-                slot <- r;
-                r)
+                ((lambda _: Unit. 
+                    (lambda _':Unit. 
+                        (lambda _'':Unit. r))
+                    slot <- r)
+                full <- 1)
         in lock
 in
 

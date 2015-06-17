@@ -440,7 +440,7 @@ let rec printtm_Term outer ctx t = match t with
   | TmAssignMvar(fi, t1, t2) ->
        obox();
        printtm_AppTerm false ctx t1;
-       pr " =<< ";
+       pr " <- ";
        printtm_AppTerm false ctx t2;
        cbox()
   | t -> printtm_AppTerm outer ctx t
@@ -557,7 +557,10 @@ let prcontext ctx =
   let rec walk ctx = match ctx with
       [] -> ();
     | (s, NameBind)::ctx' -> pr "name: "; pr s; pr "\n"; walk ctx'
-    | (s, VarBind(tyT))::ctx' -> pr "var: "; pr s; pr "\n"; walk ctx';
+    | (s, VarBind(tyT))::ctx' -> 
+        pr "var: "; pr s;
+        pr " |-"; printty ctx tyT; pr "\n"; 
+        walk ctx';
     | (s, TyVarBind)::ctx' -> pr "tyvar: "; pr s; pr "\n"; walk ctx';
     | (s, TmAbbBind(t,tyT))::ctx' -> 
       pr "tmabb: "; 

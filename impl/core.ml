@@ -249,7 +249,7 @@ let ctxsplit ctx =
         let (ctxu,ctxphi) = split1 rest in
         let binding = (a,VarBind(ty)) in
         let knd = kindof ctx ty in
-        printty ctx ty; pr ":"; printknd knd; pr "\n";
+        (* printty ctx ty; pr ":"; printknd knd; pr "\n"; *)
         (match knd with
             KndA -> (ctxu, binding::ctxphi)
           | KndU -> (binding::ctxu, ctxphi))
@@ -502,8 +502,12 @@ let rec typeof ctx t =
       tyT
   | TmVar(fi,i,_) -> getTypeFromContext fi ctx i
   | TmAbs(fi,x,tyT1,t2) ->
-      (* printtm ctx t2; pr "\n"; *)
+      pr "Using TmAbs...\n";
+      pr "[TmAbs] context:\n";
+      prcontext ctx;
       (* here to extend the context *)
+      pr "[TmAbs] add "; pr x; pr " into context with type: "; 
+      printty ctx tyT1; pr "\n";
       let ctx' = addbinding ctx x (VarBind(tyT1)) in
       (* and the type of T2 has been found *)
       let tyT2 = typeof ctx' t2 in
@@ -512,12 +516,17 @@ let rec typeof ctx t =
       TyArr(tyT1, typeShift (-1) tyT2, upKnd) (* back later *)
   | TmApp(fi,t1,t2) ->
       (* first we split our context *)
+      pr "Using TmApp ...\n";
+      (*
+      printtm ctx t1; pr "\n";
+      printtm ctx t2; pr "\n";
+      *)
       let (ctxu, ctxphi) = ctxsplit ctx in
-      
+      pr "[TmApp] ctxfull:\n";
       prcontext ctx;
-      pr "ctxu: \n";
+      pr "[TmApp] ctxu: \n";
       prcontext ctxu;
-      pr "ctxphi: \n";
+      pr "[TmApp] ctxphi: \n";
       prcontext ctxphi;
       
       (* then we check each ctx1,ctx2 in the seperated ctxphi *)      
@@ -554,28 +563,33 @@ let rec typeof ctx t =
   | TmFalse(fi) -> 
       TyBool
   | TmIf(fi,t1,t2,t3) ->
+      pr "Using TmIf...\n";
       if subtype ctx (typeof ctx t1) TyBool then
-        join ctx (typeof ctx t2) (typeof ctx t3)
+        (pr "[TmIf] passed TyBool check\n";
+        join ctx (typeof ctx t3) (typeof ctx t2))
       else error fi "guard of conditional not a boolean"
   | TmLet(fi,x,t1,t2) ->
+      pr "Using TmLet ..."; pr x; pr "\n";
       let (ctxu,ctxphi) = ctxsplit ctx in
-      (*
+      pr "[TmLet] ctx full:\n";
       prcontext ctx;
-      pr "ctxu: \n";
+      pr "[TmLet] ctxu: \n";
       prcontext ctxu;
-      pr "ctxphi: \n";
+      pr "[TmLet] ctxphi: \n";
       prcontext ctxphi;
-      *)
       (* then we check each ctx1,ctx2 in the seperated ctxphi *)      
       let rec walk ctxss = 
         match ctxss with
           [] -> raise (TypingFailed (fi,"no context applied"))
         | (ctx1,ctx2)::ctxss' ->
-          pr "try: \n"; prcontext ctx1; prcontext ctx2;
+          pr "[TmLet] try: \n"; prcontext ctx1; prcontext ctx2;
           let ctx11 = List.concat [ctx1;ctxu] in
           let ctx12 = List.concat [ctx2;ctxu] in
           try
             let tyT1 = typeof ctx11 t1 in
+            pr "[TmLet] add "; pr x; pr " into context 2 with type: ";
+            printty ctx12 tyT1;
+            pr "\n";
             let ctx12' = addbinding ctx12 x (VarBind(tyT1)) in
             let tyT2 = typeof ctx12' t2 in
                 typeShift (-1) tyT2
@@ -642,6 +656,7 @@ let rec typeof ctx t =
         | TyBot -> TyBot
         | _ -> error fi "Expected variant type")
   | TmFix(fi, t1) ->
+      pr "Using TmFix...\n";
       let tyT1 = typeof ctx t1 in
       (match simplifyty ctx tyT1 with
            TyArr(tyT11,tyT12,_) ->
@@ -680,6 +695,7 @@ let rec typeof ctx t =
         | TySource(tyT1) -> tyT1
         | _ -> error fi "argument of ! is not a Ref or Source")
   | TmDeMvar(fi,t1) ->
+      pr "Using TmDeMvar ...\n";
       (match simplifyty ctx (typeof ctx t1) with
           TyMvar(tyT1) -> tyT1
         | TyBot -> TyBot
@@ -715,7 +731,7 @@ let rec typeof ctx t =
                 pr "\n";
                 printty ctx tyT2;
                 pr "\n";
-                error fi "arguments of =<< are incompatible"
+                error fi "arguments of <- are incompatible"
         | TyBot -> let _ = typeof ctx t2 in TyBot
         | TySink(tyT1) ->
             if subtype ctx (typeof ctx t2) tyT1 then
@@ -737,7 +753,8 @@ let rec typeof ctx t =
       if subtype ctx (typeof ctx t1) TyNat then TyNat
       else error fi "argument of pred is not a number"
   | TmIsZero(fi,t1) ->
-      if subtype ctx (typeof ctx t1) TyNat then TyBool
+      pr "Using TmIsZero...\n";
+      if subtype ctx (typeof ctx t1) TyNat then (pr "[TmIsZero] Exit...\n"; TyBool)
       else error fi "argument of iszero is not a number"
   | TmFork(fi,t) -> 
     match t with
