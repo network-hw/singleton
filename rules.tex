@@ -7,6 +7,7 @@
 \usepackage{syntax}
 \usepackage{txfonts}
 \usepackage{subdepth}
+\usepackage{indentfirst}
 
 \newcommand{\xto}{\xrightarrow}
 \newcommand{\wto}{\rightsquigarrow}
@@ -16,6 +17,7 @@
 \let\emptyset\varnothing
 
 \title{Singleton Documentation}
+\author{Xiangyu Luo\\\texttt{1200012779} \and Ruizhe Zhao\\\texttt{1200012778}}
 
 \theoremstyle{definition}\newtheorem*{theorem}{Theorem}
 \theoremstyle{definition}\newtheorem*{definition}{Definition}
@@ -23,6 +25,15 @@
 
 \begin{document}
 	\maketitle
+    \section{Background}
+    Nowadays, concurrent programming is becoming more and more popular. The key issue in concurrent programming is the protection of shared data from race condition.
+    As we all konw, a bulk of technologies and theories have been studied for solving race condition (such as Mutex lock, Semaphore and Moniter). But using these
+    tools to maintain the critical section manually is error-prone and errors involved concurrent programming is usually subtle. Our new programming language Singleton
+    attempt to detect and resolve race condtion in compile time by its powerful type system, which normally names affine type based on linear logic. The key feature in
+    our type system is the availibility introduction of two different kind $\mathbf{U}$ and $\mathbf{A}$ for ordinary types, in which $\mathbf{U}$ indicates unlimit type without any
+    limitation while $\mathbf{A}$ indicates affine type and any attempt to duplicate values with affine type will cause an error.
+
+    \section{Formalization}
     \paragraph{Syntax}
     \setlength{\grammarindent}{8em} % increase separation between LHS/RHS 
     \begin{grammar}
@@ -89,22 +100,29 @@
         <number> ::= [1-9][0-9]*
     \end{grammar}
 
-    \paragraph{Kind Inference}
+    \paragraph{Kind Inference} \mbox{} \\
     \begin{mathpar}
-        \inferrule{\vdash\mathrm{Unit}\colon\mathbf{U}}{} \and
-        \inferrule{\vdash\mathrm{Ref}\ \mathrm{T}\colon\mathbf{A}}{} \and
-        \inferrule{\vdash\mathrm{Mvar}\ \mathrm{T}\colon\mathbf{U}}{} \and
-        \inferrule{\vdash\mathrm{Nat}\colon\mathbf{U}}{} \and
-        \inferrule{\vdash\mathrm{T_1}\xto{\varphi}\mathrm{T_2}\colon \varphi}{} \and
-        \inferrule{\vdash\mathrm{T_1}\colon\varphi_1\\ \vdash\mathrm{T_2}\colon\varphi_2}{\vdash \mathrm{T_1}\times\mathrm{T_2}\colon\varphi_1\sqcap\varphi_2}
+        \inferrule{\vdash\mathrm{Unit}\colon\mathbf{U}}{}\quad \mathit{(k-unit)} \and
+        \inferrule{\vdash\mathrm{Ref}\ \mathrm{T}\colon\mathbf{A}}{} \quad \mathit{(k-ref)}\and
+        \inferrule{\vdash\mathrm{Mvar}\ \mathrm{T}\colon\mathbf{U}}{} \quad \mathit{(k-mvar)}\and
+        \inferrule{\vdash\mathrm{Nat}\colon\mathbf{U}}{} \quad \mathit{(k-nat)}\and
+        \inferrule{\vdash\mathrm{T_1}\xto{\varphi}\mathrm{T_2}\colon \varphi}{} \quad \mathit{(k-app)}\and
+        \inferrule{\vdash\mathrm{T_1}\colon\varphi_1\\ \vdash\mathrm{T_2}\colon\varphi_2}{\vdash \mathrm{T_1}\times\mathrm{T_2}\colon\varphi_1\sqcap\varphi_2} \quad \mathit{(k-pair)}
     \end{mathpar}
+    In Singleton, all ordinary types are divided into two kinds $\mathbf{U}$ and $\mathbf{A}$ indicating unlimit type and affine type respcetively.
+
+    Kind inference rule introduce how to determine the kind of an ordinary type. Most of the ordinary types have kind $\mathbf{U}$ except Ref, which is the reference type we
+    intend to prevent from race condition. Note that the kind of a function type is associated with itself (named $\varphi$). The kind can be determined in type inference.
+    The other remarkable rule is the last one, in which the term has two components and the kind of whole term is the bound of components' kind.
 
     \paragraph{Kind Bound}
     \begin{mathpar}
-        \inferrule{\vdash\emptyset\aless\mathbf{U}}{} \and
+        \inferrule{\vdash\emptyset\aless\mathbf{U}}{}\and
         \inferrule{\vdash\Sigma\aless\varphi\\ \vdash\mathrm{T}\colon\mathbf{U}}{\vdash\Sigma\cup\{\mathrm{x}\colon\mathrm{T}\}\aless\varphi} \and
         \inferrule{\vdash\Sigma\aless\varphi\\ \vdash\mathrm{T}\colon\mathbf{A}}{\vdash\Sigma\cup\{\mathrm{x}\colon\mathrm{T}\}\aless\mathbf{A}}
     \end{mathpar}
+    The rules shown above is used to calculate kind bound of a type context. The calculation is summaried in form of induction: if a context containing a type with kind $\mathbf{A}$ its kind bound is $\mathbf{A}$, 
+    otherwise its kind bound is $\mathbf{U}$.
 
     \paragraph{Context Extension}
     \begin{mathpar}
@@ -112,28 +130,36 @@
         \inferrule{\vdash \mathrm{T}\colon \mathbf{U}\\ \vdash\Gamma_0\cup\{\mathrm{x}\colon \mathrm{T}\};\Sigma_0,\,\Sigma'\wto\Gamma;\Sigma}{\vdash\Gamma_0;\Sigma_0,\,\{\mathrm{x}\colon \mathrm{T}\}\cup\Sigma'\wto\Gamma;\Sigma} \and
         \inferrule{\vdash \mathrm{T}\colon \varphi\\ \vdash\Gamma_0;\Sigma_0\cup\{\mathrm{x}\colon \mathrm{T}\},\,\Sigma'\wto\Gamma;\Sigma}{\vdash\Gamma_0;\Sigma_0,\,\{\mathrm{x}\colon \mathrm{T}\}\cup\Sigma'\wto\Gamma;\Sigma}
     \end{mathpar}
+    The rules shown above is used to extend type context with parameters in a body of abstraction. The first rule implies that a type context can infer to itself
+    no matter what the new variable is. The middle one implies that only variables with $\mathit{U}$ kind type can be placed into context $\Gamma$ which will be
+    duplicated in app and fork term. The last one implies that there is no constrain of those variables could be placed into $\Sigma$ which will be splited into
+    two part in app and fork term.
 
     \paragraph{Type Inference Rules} \mbox{} \\
     \begin{mathpar}
-        \inferrule{\context \vdash \mathrm{unit}\colon\mathrm{Unit}}{} \and
-        \inferrule{\context \vdash \mathrm{n}\colon \mathrm{Nat}}{} \and
-        \inferrule{\mathrm{x}\colon \mathrm{T} \in \Gamma}{\context\vdash \mathrm{x}\colon \mathrm{T}} \and
-        \inferrule{\mathrm{x}\colon \mathrm{T} \in \Sigma}{\context \vdash \mathrm{x}\colon \mathrm{T}} \and
-        \inferrule{\Gamma;\Sigma_1\mid\Phi \vdash \mathrm{t_1}\colon \mathrm{T_1}\xto{\varphi}\mathrm{T_2}\\ \Gamma;\Sigma_2\mid\Phi \vdash \mathrm{t_2}\colon \mathrm{T_1}}{\Gamma;\Sigma_1\cup\Sigma_2\mid\Phi \vdash \mathrm{t_1}\ \mathrm{t_2}\colon \mathrm{T_2}} \and
-        \inferrule{\vdash \Gamma;\Sigma,\,\mathrm{x}\colon \mathrm{T_1} \wto \Gamma';\Sigma' \\ \Gamma';\Sigma'\mid\Phi \vdash \mathrm{t}\colon \mathrm{T_2} \\ \Gamma\vdash\Sigma\aless\varphi}{\context\vdash\lambda \mathrm{x}\colon \mathrm{T_1}.\ \mathrm{t_2}\colon \mathrm{T_1}\xto{\varphi}\mathrm{T_2}} \and
-        \inferrule{\context \vdash \mathrm{t}\colon \mathrm{T}}{\context \vdash \mathrm{ref}\ \mathrm{t}\colon  \mathrm{Ref}\ \mathrm{T}} \and
-        \inferrule{\context \vdash\mathrm{t}\colon \mathrm{Ref}\ \mathrm{T}}{\context \vdash!\,\mathrm{t}\colon \mathrm{T}}\and
-        \inferrule{\context \vdash\mathrm{t_1}\colon \mathrm{Ref}\ \mathrm{T}\\ \context \mathrm{t_2}\colon \mathrm{T}}{\context\vdash \mathrm{t_1}:=\mathrm{t_2}\colon \mathrm{Unit}} \and
-        \inferrule{\context \vdash\mathrm{t}\colon \mathrm{T}}{\context \vdash\mathrm{mvar}\ \mathrm{t}\colon\mathrm{Mvar}\ \mathrm{T}} \and
-        \inferrule{\context \vdash\mathrm{t}\colon \mathrm{Mvar}\ \mathrm{T}}{\context \vdash\$\,\mathrm{t}\colon \mathrm{T}} \and
-        \inferrule{\context \vdash\mathrm{t_1}\colon \mathrm{Mvar}\ \mathrm{T}\\ \context \vdash\mathrm{t_2}\colon \mathrm{T}}{\context\vdash\mathrm{t_1}=<<\mathrm{t_2}\colon\mathrm{Unit}} \and
-        \inferrule{\Phi(\mathrm{l})=\mathrm{T}}{\context \vdash \mathrm{l}\colon \mathrm{T}}\and
-        \inferrule{\context \vdash\mathrm{t_1}\colon \mathrm{T_1}\\\context \vdash\mathrm{t_2}\colon \mathrm{T_2}}{\context\vdash\{\,\mathrm{t_1}, \mathrm{t_2}\,\}\colon\mathrm{T_1}\times\mathrm{T_2}} \and
-        \inferrule{\context \vdash\mathrm{t}\colon\mathrm{T_1}\times\mathrm{T_2}}{\context \vdash\mathrm{t}.\mathrm{1}\colon\mathrm{T_1}} \and
-        \inferrule{\context \vdash\mathrm{t}\colon\mathrm{T_1}\times\mathrm{T_2}}{\context \vdash\mathrm{t}.\mathrm{2}\colon\mathrm{T_2}} \and
-        \inferrule{\Gamma;\Sigma_1\mid\Phi \vdash\mathrm{t_1}\colon\mathrm{T_1}\\ \Gamma;\Sigma_2\mid\Phi \vdash\mathrm{t_2}\colon\mathrm{T_2}}{\Gamma;\Sigma_1\cup\Sigma_2\mid\Phi \vdash\mathrm{fork}\ \mathrm{t_1}\ \mathrm{t_2}\colon\mathrm{T_1}\times\mathrm{T_2}} \and
-        \inferrule{\context \vdash\mathrm{t}\colon\mathrm{T}\xto{\varphi}\mathrm{T}}{\context \vdash \mathrm{fix}\ \mathrm{t}\colon\mathrm{T}}
+        \inferrule{\context \vdash \mathrm{unit}\colon\mathrm{Unit}}{} \qquad \mathit{T-UNIT}\and
+        \inferrule{\context \vdash \mathrm{n}\colon \mathrm{Nat}}{} \qquad \mathit{T-NAT} \and
+        \inferrule{\mathrm{x}\colon \mathrm{T} \in \Gamma}{\context\vdash \mathrm{x}\colon \mathrm{T}} \qquad \mathit{T-IN1}\and
+        \inferrule{\mathrm{x}\colon \mathrm{T} \in \Sigma}{\context \vdash \mathrm{x}\colon \mathrm{T}} \qquad \mathit{T-IN2} \and
+        \inferrule{\Gamma;\Sigma_1\mid\Phi \vdash \mathrm{t_1}\colon \mathrm{T_1}\xto{\varphi}\mathrm{T_2}\\ \Gamma;\Sigma_2\mid\Phi \vdash \mathrm{t_2}\colon \mathrm{T_1}}{\Gamma;\Sigma_1\cup\Sigma_2\mid\Phi \vdash \mathrm{t_1}\ \mathrm{t_2}\colon \mathrm{T_2}} \qquad \mathit{T-APP} \and
+        \inferrule{\vdash \Gamma;\Sigma,\,\mathrm{x}\colon \mathrm{T_1} \wto \Gamma';\Sigma' \\ \Gamma';\Sigma'\mid\Phi \vdash \mathrm{t}\colon \mathrm{T_2} \\ \Gamma\vdash\Sigma\aless\varphi}{\context\vdash\lambda \mathrm{x}\colon \mathrm{T_1}.\ \mathrm{t_2}\colon \mathrm{T_1}\xto{\varphi}\mathrm{T_2}} \qquad \mathit{T-ABS} \and
+        \inferrule{\context \vdash \mathrm{t}\colon \mathrm{T}}{\context \vdash \mathrm{ref}\ \mathrm{t}\colon  \mathrm{Ref}\ \mathrm{T}} \qquad \mathrm{T-REF}\and
+        \inferrule{\context \vdash\mathrm{t}\colon \mathrm{Ref}\ \mathrm{T}}{\context \vdash!\,\mathrm{t}\colon \mathrm{T}} \qquad \mathit{T-GETREF} \and
+        \inferrule{\context \vdash\mathrm{t_1}\colon \mathrm{Ref}\ \mathrm{T}\\ \context \vdash \mathrm{t_2}\colon \mathrm{T}}{\context\vdash \mathrm{t_1}:=\mathrm{t_2}\colon \mathrm{Unit}}  \qquad \mathit{T-SETREF} \and
+        \inferrule{\context \vdash\mathrm{t}\colon \mathrm{T}}{\context \vdash\mathrm{mvar}\ \mathrm{t}\colon\mathrm{Mvar}\ \mathrm{T}} \qquad \mathit{T-MVAR} \and
+        \inferrule{\context \vdash\mathrm{t}\colon \mathrm{Mvar}\ \mathrm{T}}{\context \vdash\$\,\mathrm{t}\colon \mathrm{T}} \qquad \mathit{T-GETMVAR} \and
+        \inferrule{\context \vdash\mathrm{t_1}\colon \mathrm{Mvar}\ \mathrm{T}\\ \context \vdash\mathrm{t_2}\colon \mathrm{T}}{\context\vdash\mathrm{t_1}=<<\mathrm{t_2}\colon\mathrm{Unit}} \qquad \mathit{T-SETMVAR} \and
+        \inferrule{\Phi(\mathrm{l})=\mathrm{T}}{\context \vdash \mathrm{l}\colon \mathrm{T}} \qquad \mathit{T-LOCALATION} \and
+        \inferrule{\context \vdash\mathrm{t_1}\colon \mathrm{T_1}\\\context \vdash\mathrm{t_2}\colon \mathrm{T_2}}{\context\vdash\{\,\mathrm{t_1}, \mathrm{t_2}\,\}\colon\mathrm{T_1}\times\mathrm{T_2}} \qquad \mathit{T-PAIR}\and
+        \inferrule{\context \vdash\mathrm{t}\colon\mathrm{T_1}\times\mathrm{T_2}}{\context \vdash\mathrm{t}.\mathrm{1}\colon\mathrm{T_1}} \qquad \mathit{T-PAIR1} \and
+        \inferrule{\context \vdash\mathrm{t}\colon\mathrm{T_1}\times\mathrm{T_2}}{\context \vdash\mathrm{t}.\mathrm{2}\colon\mathrm{T_2}} \qquad \mathit{T-PAIR2} \and
+        \inferrule{\Gamma;\Sigma_1\mid\Phi \vdash\mathrm{t_1}\colon\mathrm{T_1}\\ \Gamma;\Sigma_2\mid\Phi \vdash\mathrm{t_2}\colon\mathrm{T_2}}{\Gamma;\Sigma_1\cup\Sigma_2\mid\Phi \vdash\mathrm{fork}\ \mathrm{t_1}\ \mathrm{t_2}\colon\mathrm{T_1}\times\mathrm{T_2}} \qquad \mathit{T-FORK} \and
+        \inferrule{\context \vdash\mathrm{t}\colon\mathrm{T}\xto{\varphi}\mathrm{T}}{\context \vdash \mathrm{fix}\ \mathrm{t}\colon\mathrm{T}} \qquad \mathit{T-FIX}
     \end{mathpar}
+
+    Most of type rules are identical to thoses in textbook except T-APP, T-ABS and T-FORK. For T-APP, we firstly split type context $\Sigma$ and then infer type of $\mathrm{t_1}$ and $\mathrm{t_2}$
+    under the sub-context respectively. Recall that all vairables with $\mathrm{A}$ kind type are placed in $\Sigma$, thus such a split avoid duplication of affine types.
+    Furthermore, a lambda abstration could access its underlying context closure and such an abstration must be assigned to an affine kind as soon as there is affine type in context.
 
     \paragraph{Evaluation Rules}
     \begin{mathpar}
@@ -172,7 +198,9 @@
         \inferrule{\mathrm{t_1}\lto\mathrm{t'_1}}{\mathrm{fix}\ \mathrm{t_1}\lto\mathrm{fix}\ \mathrm{t'_1}}
     \end{mathpar}
     
-    \newpage
+    Note that we use a mock fork term to formalize concurrent execution. For a fork term, there are two valid evaluation rule and it's identical to the concurrent programming. All properties involved in our programming language are shown in the belown section.
+
+    \section{Properties}
     \begin{definition}
         A store $\mu$ is said to well typed with respect to a typing context $\Gamma;\Sigma$ and a store typing $\Phi$,
         written $\context\vdash\mu$, iff $dom(\mu) = dom(\Phi)$ and $\context\vdash \mu(\mathrm{l})\colon\Phi(\mathrm{l}),\ \forall \mathrm{l} \in dom(\mu)$.
@@ -290,5 +318,16 @@
             \item Other cases are trival, we omit the proof.
         \end{itemize}
     \end{proof}
+    \section{About}
+    The basic idea was inspired by the Rust's ownership system and the details about the language (such as using fork term to formalize concurrent execution and split type context to avoid duplication) were come up with by our discussion and cooperation.
+    For specific work, Xiangyu wrote down this document and give the formalized rules with skeleton of rigorous proof and Ruizhe implemented the whole language in Ocaml.
+    \section{Acknowledge}
+    Thanks Xiong, Zhao and Hu for their awesome class.
+
+    Thanks Rust for the origin inspiration.
+
+    Thanks Ocaml for the elegant implementation of our programming language.
+
+    Thanks \LaTeX{} for the convenience of typesetting such complicated rules.
 \end{document}
 

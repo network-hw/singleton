@@ -517,10 +517,8 @@ let rec typeof ctx t =
   | TmApp(fi,t1,t2) ->
       (* first we split our context *)
       pr "Using TmApp ...\n";
-      (*
-      printtm ctx t1; pr "\n";
-      printtm ctx t2; pr "\n";
-      *)
+      pr "==>"; printtm ctx t1; pr "\n";
+      pr "==>"; printtm ctx t2; pr "\n";
       let (ctxu, ctxphi) = ctxsplit ctx in
       pr "[TmApp] ctxfull:\n";
       prcontext ctx;

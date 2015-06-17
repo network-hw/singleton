@@ -6,19 +6,19 @@ let newlock = lambda slot: Mvar (Ref Nat).
                     if iszero ($full) then 
                         (lock flag) r
                     else
-                        (lambda _: Unit.
-                            (lambda _': Unit. $slot)
-                        full <- 0)
+                        (lambda _:Unit.$slot) (full <- 0)
                 else
-                    ((lambda _: Unit. 
-                        (lambda _':Unit. 
-                            (lambda _'':Unit. r))
-                        slot <- r)
-                    full <- 1)
-        in 
-            lock
+                    (lambda _':Unit.((lambda _:Unit.r) (slot <- r)))  (full <- 1)
+        in lock
 in
 
+newlock;
+
 let account = ref 0 in
-    let deposit = lambda _:Unit. account := (succ (!account)) in
+    let lock = newlock (mvar account) in
+    let deposit = lambda _:Unit. 
+    let buf = lock 0 (ref 0) in 
+        account := (succ (!account));
+        lock 1 buf
+    in
         fork {(deposit unit), (deposit unit)}; 
