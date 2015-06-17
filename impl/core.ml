@@ -592,9 +592,24 @@ let rec typeof ctx t =
         List.iter (fun (s,b) -> pr s; prbinding ctxphi b; pr "\n") ctxphi;*)
         walk ctxss
   | TmProduct(fi,t1,t2)->
-      let tyT1 = typeof ctx t1 in
-      let tyT2 = typeof ctx t2 in 
-      TyProduct(tyT1, tyT2)
+      let (ctxu,ctxphi) = ctxsplit ctx in
+      let rec walk ctxss = 
+        match ctxss with
+          [] -> raise (TypingFailed (fi,"no context applied"))
+        | (ctx1,ctx2)::ctxss' ->
+          pr "try: \n"; prcontext ctx1; prcontext ctx2;
+          let ctx11 = List.concat [ctx1;ctxu] in
+          let ctx12 = List.concat [ctx2;ctxu] in
+          try
+            let tyT1 = typeof ctx11 t1 in
+            let tyT2 = typeof ctx12 t2 in
+              typeShift (-1) tyT2
+          with 
+            TypingFailed(_,msg) -> walk ctxss'
+          | Syntax.GetTypeFailure -> walk ctxss'
+      in
+      let ctxss = (ctxseperate ctxphi) in
+        walk ctxss
   | TmRecord(fi, fields) ->
       let fieldtys = 
         List.map (fun (li,ti) -> (li, typeof ctx ti)) fields in
