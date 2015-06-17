@@ -74,7 +74,7 @@ let reservedWords = [
   ("<-", fun i -> Parser.LEFTARROW i); 
   ("{|", fun i -> Parser.LCURLYBAR i); 
   ("[|", fun i -> Parser.LSQUAREBAR i); 
-  ("=<<", fun i -> Parser.EQLLT i);
+  ("<-", fun i -> Parser.EQLLT i);
   ("}", fun i -> Parser.RCURLY i);
   (")", fun i -> Parser.RPAREN i);
   ("]", fun i -> Parser.RSQUARE i);
