@@ -578,7 +578,7 @@ let rec typeof ctx t =
             let tyT1 = typeof ctx11 t1 in
             let ctx12' = addbinding ctx12 x (VarBind(tyT1)) in
             let tyT2 = typeof ctx12' t2 in
-              typeShift (-1) tyT2
+                typeShift (-1) tyT2
           with 
             TypingFailed(_,msg) ->
               (*pr msg;*)
@@ -705,7 +705,17 @@ let rec typeof ctx t =
             if subtype ctx (typeof ctx t2) tyT1 then
               TyUnit
             else
-              error fi "arguments of =<< are incompatible"
+              let tyT2 = typeof ctx t2 in
+                pr "T1: \n";
+                printtm ctx t1;
+                pr "\n";
+                printty ctx tyT1;
+                pr "\nT2: \n";
+                printtm ctx t2;
+                pr "\n";
+                printty ctx tyT2;
+                pr "\n";
+                error fi "arguments of =<< are incompatible"
         | TyBot -> let _ = typeof ctx t2 in TyBot
         | TySink(tyT1) ->
             if subtype ctx (typeof ctx t2) tyT1 then

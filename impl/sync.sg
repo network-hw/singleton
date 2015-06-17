@@ -1,3 +1,19 @@
+let newlock = lambda slot: Mvar (Ref Nat).
+    let full = mvar 1 in
+        letrec lock:Nat->(U)(Ref Nat)->(U)Unit = lambda flag:Nat. lambda r:Ref Nat.
+            if iszero flag then /* aquire lock */
+                if iszero full then
+                    lock flag r
+                else
+                    (full <- 0; 
+                    $slot)
+            else
+                (full <- 1;
+                slot <- r;
+                r)
+        in lock
+in
+
 let account = ref 0 in
-    let deposit = lambda _:Unit. account := succ (!account) in
-        fork {(deposit unit), (deposit unit)};
+    let deposit = lambda _:Unit. account := (succ (!account)) in
+        fork {(deposit unit), (deposit unit)}; 
